@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: smart-campus-api
+  profiles:
+    active: local
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+server:
+  port: 8080
