@@ -1,0 +1,38 @@
+# Dependencies / build output
+node_modules/
+dist/
+build/
+target/
+
+# Secrets and environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+secrets/
+application-local.yml
+application-local.properties
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+*.mv.db
+*.h2.db
+data/
+db/
+
+# Logs
+*.log
+
+# Local uploads
+uploads/
+
+# IDE / OS files
+.idea/
+.vscode/
+*.iml
+.DS_Store
