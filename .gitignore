@@ -17,13 +17,16 @@ application-local.yml
 application-local.properties
 
 # Local databases
+# Specific patterns only - do NOT ignore source SQL folders.
 *.db
 *.sqlite
 *.sqlite3
 *.mv.db
 *.h2.db
 data/
-db/
+local-db/
+*.dump
+*.sql.gz
 
 # Logs
 *.log

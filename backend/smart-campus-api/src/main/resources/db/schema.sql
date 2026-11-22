@@ -1,0 +1,75 @@
+-- Smart Campus Student Hub - database schema
+-- Safe to commit: this file contains no usernames or passwords.
+
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('STUDENT', 'STAFF', 'ADMIN') NOT NULL DEFAULT 'STUDENT',
+    student_id VARCHAR(50) UNIQUE,
+    department VARCHAR(100),
+    phone VARCHAR(30),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS notices (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    body TEXT NOT NULL,
+    category ENUM('GENERAL', 'ACADEMIC', 'EVENT', 'URGENT') NOT NULL DEFAULT 'GENERAL',
+    posted_by BIGINT NOT NULL,
+    is_pinned BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_notices_posted_by FOREIGN KEY (posted_by) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS complaints (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    reference_code VARCHAR(20) NOT NULL UNIQUE,
+    title VARCHAR(200) NOT NULL,
+    description TEXT NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    status ENUM('OPEN', 'IN_PROGRESS', 'RESOLVED', 'REJECTED') NOT NULL DEFAULT 'OPEN',
+    created_by BIGINT NOT NULL,
+    assigned_to BIGINT NULL,
+    resolution_note TEXT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_complaints_created_by FOREIGN KEY (created_by) REFERENCES users(id),
+    CONSTRAINT fk_complaints_assigned_to FOREIGN KEY (assigned_to) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS lost_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    reference_code VARCHAR(20) NOT NULL UNIQUE,
+    item_name VARCHAR(200) NOT NULL,
+    description TEXT NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    location VARCHAR(200) NOT NULL,
+    lost_or_found ENUM('LOST', 'FOUND') NOT NULL,
+    status ENUM('OPEN', 'MATCHED', 'CLAIMED', 'RETURNED') NOT NULL DEFAULT 'OPEN',
+    image_url VARCHAR(500) NULL,
+    created_by BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_lost_items_created_by FOREIGN KEY (created_by) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS claims (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    item_id BIGINT NOT NULL,
+    claimed_by BIGINT NOT NULL,
+    message TEXT NULL,
+    status ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    handled_by BIGINT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT uq_claim_item_user UNIQUE (item_id, claimed_by),
+    CONSTRAINT fk_claims_item FOREIGN KEY (item_id) REFERENCES lost_items(id),
+    CONSTRAINT fk_claims_claimed_by FOREIGN KEY (claimed_by) REFERENCES users(id),
+    CONSTRAINT fk_claims_handled_by FOREIGN KEY (handled_by) REFERENCES users(id)
+) ENGINE=InnoDB;
