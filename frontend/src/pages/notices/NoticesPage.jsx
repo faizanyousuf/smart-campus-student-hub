@@ -7,6 +7,7 @@ import {
   EmptyState,
   ErrorBox,
   PageHeader,
+  apiError,
   categoryTone
 } from '../../components/ui.jsx';
 
@@ -24,7 +25,7 @@ export default function NoticesPage() {
     api
       .get('/notices')
       .then((response) => setNotices(response.data))
-      .catch((err) => setError(err.message));
+      .catch((err) => setError(apiError(err)));
   };
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function NoticesPage() {
       setForm(emptyForm);
       load();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(apiError(err));
     }
   };
 
@@ -49,7 +50,7 @@ export default function NoticesPage() {
       await api.patch(`/notices/${notice.id}/${notice.pinned ? 'unpin' : 'pin'}`);
       load();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(apiError(err));
     }
   };
 
@@ -58,7 +59,7 @@ export default function NoticesPage() {
       await api.delete(`/notices/${notice.id}`);
       load();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(apiError(err));
     }
   };
 

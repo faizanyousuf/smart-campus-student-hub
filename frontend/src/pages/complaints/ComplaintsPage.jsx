@@ -7,6 +7,7 @@ import {
   EmptyState,
   ErrorBox,
   PageHeader,
+  apiError,
   statusTone
 } from '../../components/ui.jsx';
 
@@ -24,7 +25,7 @@ export default function ComplaintsPage() {
     api
       .get('/complaints')
       .then((response) => setComplaints(response.data))
-      .catch((err) => setError(err.response?.data?.message || err.message));
+      .catch((err) => setError(apiError(err)));
   };
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function ComplaintsPage() {
       setForm(emptyForm);
       load();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(apiError(err));
     }
   };
 
@@ -49,7 +50,7 @@ export default function ComplaintsPage() {
       await api.patch(`/complaints/${complaint.id}/assign`);
       load();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(apiError(err));
     }
   };
 
@@ -58,7 +59,7 @@ export default function ComplaintsPage() {
       await api.patch(`/complaints/${complaint.id}/status`, { status });
       load();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(apiError(err));
     }
   };
 

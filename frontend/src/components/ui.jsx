@@ -38,6 +38,13 @@ export function EmptyState({ title, text }) {
   );
 }
 
+export function apiError(error) {
+  if (error.response?.status === 401) {
+    return 'Your session has expired. Please sign out and sign in again.';
+  }
+  return error.response?.data?.message || error.message;
+}
+
 export function statusTone(status = '') {
   const value = String(status).toUpperCase();
 

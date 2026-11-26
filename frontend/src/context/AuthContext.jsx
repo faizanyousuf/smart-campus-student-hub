@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import api from '../api/api.js';
+import api, { forgetCredentials, rememberCredentials } from '../api/api.js';
 
 const AuthContext = createContext(null);
 
@@ -8,24 +8,32 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const handleSessionExpired = () => setUser(null);
+    window.addEventListener('auth:session-expired', handleSessionExpired);
+
     const token = localStorage.getItem('token');
 
     if (!token) {
       setLoading(false);
-      return;
+      return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
     }
 
-    api.get('/auth/me')
+    api
+      .get('/auth/me')
       .then((response) => setUser(response.data))
       .catch(() => {
         localStorage.removeItem('token');
+        forgetCredentials();
         setUser(null);
       })
       .finally(() => setLoading(false));
+
+    return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
   }, []);
 
   const login = async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
+    rememberCredentials(email, password);
     localStorage.setItem('token', response.data.token);
     setUser(response.data);
     return response.data;
@@ -33,6 +41,7 @@ export function AuthProvider({ children }) {
 
   const register = async (payload) => {
     const response = await api.post('/auth/register', payload);
+    rememberCredentials(payload.email, payload.password);
     localStorage.setItem('token', response.data.token);
     setUser(response.data);
     return response.data;
@@ -40,6 +49,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('token');
+    forgetCredentials();
     setUser(null);
   };
 

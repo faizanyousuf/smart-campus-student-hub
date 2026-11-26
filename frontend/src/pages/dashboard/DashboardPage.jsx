@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api/api.js';
 import Icon from '../../components/Icon.jsx';
-import { Badge, EmptyState } from '../../components/ui.jsx';
+import { Badge, EmptyState, apiError } from '../../components/ui.jsx';
 
 export default function DashboardPage() {
   const [data, setData] = useState(null);
@@ -12,7 +12,7 @@ export default function DashboardPage() {
     api
       .get('/dashboard')
       .then((response) => setData(response.data))
-      .catch((err) => setError(err.response?.data?.message || err.message));
+      .catch((err) => setError(apiError(err)));
   }, []);
 
   if (error) {

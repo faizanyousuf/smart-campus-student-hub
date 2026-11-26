@@ -7,6 +7,7 @@ import {
   EmptyState,
   ErrorBox,
   PageHeader,
+  apiError,
   statusTone
 } from '../../components/ui.jsx';
 
@@ -35,14 +36,14 @@ export default function LostFoundPage() {
     api
       .get(url)
       .then((response) => setItems(response.data))
-      .catch((err) => setError(err.response?.data?.message || err.message));
+      .catch((err) => setError(apiError(err)));
   };
 
   const loadClaims = () => {
     api
       .get('/claims')
       .then((response) => setClaims(response.data))
-      .catch((err) => setError(err.response?.data?.message || err.message));
+      .catch((err) => setError(apiError(err)));
   };
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function LostFoundPage() {
       setForm(emptyForm);
       loadItems();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(apiError(err));
     }
   };
 
@@ -71,7 +72,7 @@ export default function LostFoundPage() {
       await api.post(`/lost-items/${item.id}/claims`, { message });
       loadClaims();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(apiError(err));
     }
   };
 
@@ -80,7 +81,7 @@ export default function LostFoundPage() {
       await api.patch(`/lost-items/${item.id}/status`, { status });
       loadItems();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(apiError(err));
     }
   };
 
@@ -90,7 +91,7 @@ export default function LostFoundPage() {
       loadClaims();
       loadItems();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(apiError(err));
     }
   };
 

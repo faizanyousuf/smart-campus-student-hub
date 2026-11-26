@@ -184,6 +184,8 @@ git ls-files | grep -E '(application-local|\.env$|node_modules|target/)' || echo
 
 ## Safety
 
+The frontend keeps the signed-in credentials in **tab-scoped `sessionStorage`** only, so an expired JWT can be renewed silently and the original request retried. These values are never written to `localStorage`, never logged, and never committed. Signing out clears them.
+
 `.gitignore` blocks:
 
 - `.env`, `.env.*` except `.env.example`
