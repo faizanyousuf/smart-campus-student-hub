@@ -1,12 +1,14 @@
 import { useAuth } from './context/AuthContext.jsx';
+import { useState } from 'react';
 import LoginPage from './pages/auth/LoginPage.jsx';
 import RegisterPage from './pages/auth/RegisterPage.jsx';
 import NoticesPage from './pages/notices/NoticesPage.jsx';
-import { useState } from 'react';
+import ComplaintsPage from './pages/complaints/ComplaintsPage.jsx';
 
 function App() {
   const { user, loading, logout } = useAuth();
   const [mode, setMode] = useState('login');
+  const [tab, setTab] = useState('notices');
 
   if (loading) {
     return <p style={{ fontFamily: 'sans-serif', padding: 24 }}>Loading...</p>;
@@ -31,7 +33,20 @@ function App() {
           </p>
           <button onClick={logout}>Logout</button>
 
-          <NoticesPage />
+          <div style={{ margin: '16px 0' }}>
+            <button onClick={() => setTab('notices')} disabled={tab === 'notices'}>
+              Notices
+            </button>
+            <button
+              onClick={() => setTab('complaints')}
+              disabled={tab === 'complaints'}
+              style={{ marginLeft: 8 }}
+            >
+              Complaints
+            </button>
+          </div>
+
+          {tab === 'notices' ? <NoticesPage /> : <ComplaintsPage />}
         </>
       )}
     </main>
