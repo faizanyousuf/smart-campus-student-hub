@@ -89,6 +89,12 @@ public class LostItemService {
         User claimant = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NoSuchElementException("User not found: " + email));
 
+        // Only FOUND items are waiting to be collected by their owner.
+        // A LOST item is a report of something missing, not a claimable object.
+        if (item.getLostOrFound() != LostItem.LostOrFound.FOUND) {
+            throw new IllegalArgumentException("Only found items can be claimed");
+        }
+
         if (item.getCreatedBy().getId().equals(claimant.getId())) {
             throw new IllegalArgumentException("You cannot claim your own item");
         }
@@ -103,7 +109,15 @@ public class LostItemService {
         }
 
         Claim claim = new Claim(item, claimant, request.message());
-        return toClaimResponse(claimRepository.save(claim));
+        ClaimResponse response = toClaimResponse(claimRepository.save(claim));
+
+        // A claim means a possible owner was found: reflect it immediately.
+        if (item.getStatus() == LostItem.Status.OPEN) {
+            item.setStatus(LostItem.Status.MATCHED);
+            lostItemRepository.save(item);
+        }
+
+        return response;
     }
 
     public List<ClaimResponse> findClaimsForItem(Long itemId, Authentication authentication) {
@@ -167,14 +181,26 @@ public class LostItemService {
 
         claim.setStatus(decision);
         claim.setHandledBy(staff);
+        ClaimResponse response = toClaimResponse(claimRepository.save(claim));
+
+        LostItem item = claim.getItem();
 
         if (decision == Claim.Status.APPROVED) {
-            LostItem item = claim.getItem();
             item.setStatus(LostItem.Status.CLAIMED);
             lostItemRepository.save(item);
+        } else if (item.getStatus() == LostItem.Status.MATCHED) {
+            // Reopen only when no other claim is still waiting for a decision.
+            boolean otherPending = claimRepository.findByItem(item).stream()
+                    .anyMatch(other -> !other.getId().equals(claimId)
+                            && other.getStatus() == Claim.Status.PENDING);
+
+            if (!otherPending) {
+                item.setStatus(LostItem.Status.OPEN);
+                lostItemRepository.save(item);
+            }
         }
 
-        return toClaimResponse(claimRepository.save(claim));
+        return response;
     }
 
     private boolean isManager(Authentication authentication) {

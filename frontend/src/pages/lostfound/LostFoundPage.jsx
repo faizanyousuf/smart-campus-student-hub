@@ -70,7 +70,9 @@ export default function LostFoundPage() {
 
     try {
       await api.post(`/lost-items/${item.id}/claims`, { message });
+      setError('');
       loadClaims();
+      loadItems();
     } catch (err) {
       setError(apiError(err));
     }
@@ -96,6 +98,20 @@ export default function LostFoundPage() {
   };
 
   const pendingClaims = claims.filter((claim) => claim.status === 'PENDING').length;
+
+  const claimForItem = (item) =>
+    claims.find(
+      (claim) => claim.itemId === item.id && claim.status !== 'REJECTED'
+    );
+
+  // Only FOUND items wait to be collected by their owner.
+  const canClaim = (item) =>
+    !canManage &&
+    item.lostOrFound === 'FOUND' &&
+    item.status !== 'CLAIMED' &&
+    item.status !== 'RETURNED' &&
+    item.createdById !== user?.id &&
+    !claimForItem(item);
 
   return (
     <>
@@ -235,9 +251,26 @@ export default function LostFoundPage() {
                     <span>by {item.createdByName}</span>
                   </div>
                   <div className="item-actions">
-                    <button className="btn btn-sm btn-primary" onClick={() => claimItem(item)}>
-                      <Icon name="check" size={13} /> Claim
-                    </button>
+                    {!canManage &&
+                      (item.lostOrFound === 'FOUND' ? (
+                        canClaim(item) ? (
+                          <button className="btn btn-sm btn-primary" onClick={() => claimItem(item)}>
+                            <Icon name="check" size={13} /> Claim
+                          </button>
+                        ) : (
+                          <span className="muted">
+                            {item.createdById === user?.id
+                              ? 'Your report'
+                              : item.status === 'CLAIMED' || item.status === 'RETURNED'
+                                ? 'Claimed'
+                                : claimForItem(item)
+                                  ? 'Claim submitted'
+                                  : 'Not available'}
+                          </span>
+                        )
+                      ) : (
+                        <span className="muted">Lost report</span>
+                      ))}
                     {canManage && (
                       <select
                         aria-label={`Status for ${item.referenceCode}`}

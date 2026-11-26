@@ -22,7 +22,7 @@ A clean, guided rebuild of the Smart Campus Student Hub.
 - **Auth** — login, register, `/auth/me` session restore, logout
 - **Notices** — public reading; staff/admin create, edit, pin, unpin, delete
 - **Complaints** — students submit and view their own; staff/admin assign and change status
-- **Lost & Found** — report items, claim items, approve/reject claims, item status updates
+- **Lost & Found** — report items, claim **FOUND** items only, approve/reject claims, item status updates. Submitting a claim moves the item to `MATCHED`; staff approval moves it to `CLAIMED`; rejecting the last pending claim returns it to `OPEN`.
 - **Dashboard** — role-aware summary counts
 
 ## Demo accounts
