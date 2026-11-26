@@ -8,14 +8,11 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const handleSessionExpired = () => setUser(null);
-    window.addEventListener('auth:session-expired', handleSessionExpired);
-
     const token = localStorage.getItem('token');
 
     if (!token) {
       setLoading(false);
-      return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
+      return;
     }
 
     api
@@ -27,8 +24,6 @@ export function AuthProvider({ children }) {
         setUser(null);
       })
       .finally(() => setLoading(false));
-
-    return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
   }, []);
 
   const login = async (email, password) => {

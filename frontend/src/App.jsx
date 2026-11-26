@@ -10,7 +10,23 @@ import ComplaintsPage from './pages/complaints/ComplaintsPage.jsx';
 import LostFoundPage from './pages/lostfound/LostFoundPage.jsx';
 
 function App() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: 'grid',
+          placeItems: 'center',
+          minHeight: '100vh',
+          gap: 12
+        }}
+      >
+        <span className="spinner" />
+        <span className="muted">Restoring your session...</span>
+      </div>
+    );
+  }
 
   return (
     <Routes>

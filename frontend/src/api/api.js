@@ -29,10 +29,9 @@ export function forgetCredentials() {
   sessionStorage.removeItem(CREDENTIALS_KEY);
 }
 
-function sessionExpired() {
+function clearSession() {
   localStorage.removeItem('token');
   forgetCredentials();
-  window.dispatchEvent(new CustomEvent('auth:session-expired'));
 }
 
 api.interceptors.request.use((config) => {
@@ -61,15 +60,15 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Already retried once — give up cleanly.
+    // Already retried once — give up cleanly without forcing navigation.
     if (original?._retry) {
-      sessionExpired();
+      clearSession();
       return Promise.reject(error);
     }
 
     // Session restored from localStorage only: no credentials to renew with.
     if (!credentials) {
-      sessionExpired();
+      clearSession();
       return Promise.reject(error);
     }
 
@@ -86,7 +85,7 @@ api.interceptors.response.use(
 
       return api(original);
     } catch (retryError) {
-      sessionExpired();
+      clearSession();
       return Promise.reject(error);
     }
   }
