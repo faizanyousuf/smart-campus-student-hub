@@ -182,6 +182,26 @@ git log --oneline -5
 git ls-files | grep -E '(application-local|\.env$|node_modules|target/)' || echo "No secrets or build output tracked"
 ```
 
+## Troubleshooting
+
+If the UI ever shows `Your session has expired`, clear all browser state for the app once and sign in again:
+
+```js
+// Browser console on http://localhost:5173
+localStorage.clear();
+sessionStorage.clear();
+location.href = '/login';
+```
+
+Then restart the frontend with a clean Vite cache if the problem predates the latest build:
+
+```bash
+cd frontend
+npm run dev -- --force
+```
+
+Use `http://localhost:5173` and make sure only one backend is listening on port `8080`.
+
 ## Safety
 
 The frontend keeps the signed-in credentials in **tab-scoped `sessionStorage`** only, so an expired JWT can be renewed silently and the original request retried. These values are never written to `localStorage`, never logged, and never committed. Signing out clears them.
