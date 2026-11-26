@@ -4,6 +4,7 @@ import LoginPage from './pages/auth/LoginPage.jsx';
 import RegisterPage from './pages/auth/RegisterPage.jsx';
 import NoticesPage from './pages/notices/NoticesPage.jsx';
 import ComplaintsPage from './pages/complaints/ComplaintsPage.jsx';
+import LostFoundPage from './pages/lostfound/LostFoundPage.jsx';
 
 function App() {
   const { user, loading, logout } = useAuth();
@@ -44,9 +45,18 @@ function App() {
             >
               Complaints
             </button>
+            <button
+              onClick={() => setTab('lostfound')}
+              disabled={tab === 'lostfound'}
+              style={{ marginLeft: 8 }}
+            >
+              Lost &amp; Found
+            </button>
           </div>
 
-          {tab === 'notices' ? <NoticesPage /> : <ComplaintsPage />}
+          {tab === 'notices' && <NoticesPage />}
+          {tab === 'complaints' && <ComplaintsPage />}
+          {tab === 'lostfound' && <LostFoundPage />}
         </>
       )}
     </main>
