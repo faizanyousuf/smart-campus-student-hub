@@ -204,7 +204,7 @@ Use `http://localhost:5173` and make sure only one backend is listening on port 
 
 ## Safety
 
-The frontend keeps the signed-in credentials in **tab-scoped `sessionStorage`** only, so an expired JWT can be renewed silently and the original request retried. These values are never written to `localStorage`, never logged, and never committed. Signing out clears them.
+The frontend keeps the signed-in credentials in browser storage (`sessionStorage` with a `localStorage` fallback) so an expired JWT can be renewed silently and the original request retried. These values are never logged or committed. Signing out clears both stores.
 
 `.gitignore` blocks:
 

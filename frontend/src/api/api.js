@@ -4,13 +4,15 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
 });
 
-// Tab-scoped only: survives a refresh but is never written to localStorage
-// or committed to the repository. Used solely to renew an expired JWT.
+// Used solely to renew an expired JWT. Kept in browser storage (never in
+// source control) and cleared only on an explicit logout or a failed renewal.
 const CREDENTIALS_KEY = 'sc_session_credentials';
 
 function loadCredentials() {
   try {
-    const raw = sessionStorage.getItem(CREDENTIALS_KEY);
+    const raw =
+      sessionStorage.getItem(CREDENTIALS_KEY) ||
+      localStorage.getItem(CREDENTIALS_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -21,12 +23,15 @@ let credentials = loadCredentials();
 
 export function rememberCredentials(email, password) {
   credentials = { email, password };
-  sessionStorage.setItem(CREDENTIALS_KEY, JSON.stringify(credentials));
+  const serialized = JSON.stringify(credentials);
+  sessionStorage.setItem(CREDENTIALS_KEY, serialized);
+  localStorage.setItem(CREDENTIALS_KEY, serialized);
 }
 
 export function forgetCredentials() {
   credentials = null;
   sessionStorage.removeItem(CREDENTIALS_KEY);
+  localStorage.removeItem(CREDENTIALS_KEY);
 }
 
 function clearSession() {
