@@ -61,6 +61,7 @@ smart-campus/
 │           └── db/schema.sql
 ├── frontend/
 │   └── src/
+│       ├── index.css          # Global styling
 │       ├── api/               # Axios helper with JWT interceptor
 │       ├── components/        # Layout, ProtectedRoute
 │       ├── context/           # AuthContext

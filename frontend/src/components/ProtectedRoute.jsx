@@ -5,7 +5,19 @@ export default function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <p style={{ fontFamily: 'sans-serif', padding: 24 }}>Loading...</p>;
+    return (
+      <div
+        style={{
+          display: 'grid',
+          placeItems: 'center',
+          minHeight: '100vh',
+          gap: 12
+        }}
+      >
+        <span className="spinner" />
+        <span className="muted">Restoring your session...</span>
+      </div>
+    );
   }
 
   if (!user) {

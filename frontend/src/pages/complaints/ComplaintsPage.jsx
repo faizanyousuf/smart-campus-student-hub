@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import Icon from '../../components/Icon.jsx';
+import {
+  Badge,
+  EmptyState,
+  ErrorBox,
+  PageHeader,
+  statusTone
+} from '../../components/ui.jsx';
+
+const emptyForm = { title: '', description: '', category: 'FACILITY' };
 
 export default function ComplaintsPage() {
   const { user } = useAuth();
@@ -8,14 +18,11 @@ export default function ComplaintsPage() {
 
   const [complaints, setComplaints] = useState([]);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    category: 'FACILITY'
-  });
+  const [form, setForm] = useState(emptyForm);
 
   const load = () => {
-    api.get('/complaints')
+    api
+      .get('/complaints')
       .then((response) => setComplaints(response.data))
       .catch((err) => setError(err.response?.data?.message || err.message));
   };
@@ -30,7 +37,7 @@ export default function ComplaintsPage() {
 
     try {
       await api.post('/complaints', form);
-      setForm({ title: '', description: '', category: 'FACILITY' });
+      setForm(emptyForm);
       load();
     } catch (err) {
       setError(err.response?.data?.message || err.message);
@@ -55,79 +62,136 @@ export default function ComplaintsPage() {
     }
   };
 
+  const openCount = complaints.filter((c) => c.status === 'OPEN').length;
+
   return (
-    <section>
-      <h2>Complaints</h2>
-
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      <form onSubmit={create} style={{ maxWidth: 480, marginBottom: 16 }}>
-        <h3>Submit a complaint</h3>
-
-        <input
-          placeholder="Title"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-          style={{ display: 'block', width: '100%', margin: '6px 0' }}
-        />
-
-        <textarea
-          placeholder="Description"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          style={{ display: 'block', width: '100%', margin: '6px 0' }}
-        />
-
-        <select
-          value={form.category}
-          onChange={(e) => setForm({ ...form, category: e.target.value })}
-          style={{ display: 'block', width: '100%', margin: '6px 0' }}
-        >
-          <option>FACILITY</option>
-          <option>ACADEMIC</option>
-          <option>HOSTEL</option>
-          <option>TRANSPORT</option>
-          <option>OTHER</option>
-        </select>
-
-        <button type="submit" style={{ marginTop: 8 }}>Submit complaint</button>
-      </form>
-
-      {complaints.length === 0 && <p>No complaints yet.</p>}
-
-      <ul>
-        {complaints.map((complaint) => (
-          <li key={complaint.id} style={{ marginBottom: 16 }}>
-            <strong>
-              {complaint.referenceCode} — {complaint.title}
-            </strong>
-            <div>{complaint.description}</div>
-            <small>
-              {complaint.category} · {complaint.status} · by {complaint.createdByName}
-              {complaint.assignedToName && ` · assigned to ${complaint.assignedToName}`}
-            </small>
-
+    <>
+      <PageHeader
+        eyebrow="Support"
+        title="Complaints"
+        description="Submit an issue and follow its progress from open to resolved."
+        actions={
+          <>
+            <Badge tone="amber">{openCount} open</Badge>
             {canManage && (
-              <div style={{ marginTop: 8 }}>
-                {!complaint.assignedToId && (
-                  <button onClick={() => assignToMe(complaint)}>Assign to me</button>
-                )}
+              <Badge tone="violet">
+                <Icon name="shield" size={12} /> Staff view
+              </Badge>
+            )}
+          </>
+        }
+      />
 
+      <ErrorBox message={error} />
+
+      <div className="content-grid">
+        <div className="card">
+          <div className="card-head">
+            <div>
+              <h3 className="card-title">New complaint</h3>
+              <p className="card-sub">Tell us what needs attention.</p>
+            </div>
+            <Icon name="plus" size={18} />
+          </div>
+          <form onSubmit={create}>
+            <div className="form-grid">
+              <div className="field field-full">
+                <label htmlFor="complaint-title">Title</label>
+                <input
+                  id="complaint-title"
+                  placeholder="Short summary of the issue"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                />
+              </div>
+              <div className="field field-full">
+                <label htmlFor="complaint-description">Description</label>
+                <textarea
+                  id="complaint-description"
+                  placeholder="Add details that will help us resolve it..."
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                />
+              </div>
+              <div className="field field-full">
+                <label htmlFor="complaint-category">Category</label>
                 <select
-                  value={complaint.status}
-                  onChange={(e) => changeStatus(complaint, e.target.value)}
-                  style={{ marginLeft: 8 }}
+                  id="complaint-category"
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
                 >
-                  <option>OPEN</option>
-                  <option>IN_PROGRESS</option>
-                  <option>RESOLVED</option>
-                  <option>REJECTED</option>
+                  <option>FACILITY</option>
+                  <option>ACADEMIC</option>
+                  <option>HOSTEL</option>
+                  <option>TRANSPORT</option>
+                  <option>OTHER</option>
                 </select>
               </div>
-            )}
-          </li>
-        ))}
-      </ul>
-    </section>
+            </div>
+            <div className="form-actions">
+              <button className="btn btn-primary" type="submit">
+                <Icon name="plus" size={15} /> Submit complaint
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div className="card">
+          <div className="card-head">
+            <div>
+              <h3 className="card-title">Complaint queue</h3>
+              <p className="card-sub">{complaints.length} total record{complaints.length === 1 ? '' : 's'}</p>
+            </div>
+            <Icon name="complaint" size={18} />
+          </div>
+
+          {complaints.length === 0 ? (
+            <EmptyState title="No complaints yet" text="Submitted issues will appear here." />
+          ) : (
+            <div className="list">
+              {complaints.map((complaint) => (
+                <article className="list-item" key={complaint.id}>
+                  <div className="item-top">
+                    <h4 className="item-title">
+                      <span className="mono">{complaint.referenceCode}</span> — {complaint.title}
+                    </h4>
+                    <Badge tone={statusTone(complaint.status)}>{complaint.status}</Badge>
+                  </div>
+                  <p className="item-body">{complaint.description}</p>
+                  <div className="item-meta">
+                    <span>{complaint.category}</span>
+                    <span>
+                      <Icon name="users" size={13} /> {complaint.createdByName}
+                    </span>
+                    {complaint.assignedToName && (
+                      <span>Assigned to {complaint.assignedToName}</span>
+                    )}
+                  </div>
+                  {canManage && (
+                    <div className="item-actions">
+                      {!complaint.assignedToId && (
+                        <button className="btn btn-sm" onClick={() => assignToMe(complaint)}>
+                          <Icon name="check" size={13} /> Assign to me
+                        </button>
+                      )}
+                      <select
+                        aria-label={`Status for ${complaint.referenceCode}`}
+                        value={complaint.status}
+                        onChange={(e) => changeStatus(complaint, e.target.value)}
+                      >
+                        <option>OPEN</option>
+                        <option>IN_PROGRESS</option>
+                        <option>RESOLVED</option>
+                        <option>REJECTED</option>
+                      </select>
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   );
 }
