@@ -184,7 +184,18 @@ git ls-files | grep -E '(application-local|\.env$|node_modules|target/)' || echo
 
 ## Troubleshooting
 
-If the UI ever shows `Your session has expired`, clear all browser state for the app once and sign in again:
+Expired tokens are renewed **before** a request is sent, so a normal expiry never produces a visible `401`. If you still see `Your session has expired`:
+
+1. Click **Sign out**, then sign in again. This rewrites the renewal credentials.
+2. Hard-refresh (`Ctrl+Shift+R`) so the old JS bundle is discarded.
+3. Restart the frontend with a clean Vite cache if the problem predates the latest build:
+
+```bash
+cd frontend
+npm run dev -- --force
+```
+
+Only as a last resort, clear browser storage and sign in once more:
 
 ```js
 // Browser console on http://localhost:5173
@@ -193,18 +204,11 @@ sessionStorage.clear();
 location.href = '/login';
 ```
 
-Then restart the frontend with a clean Vite cache if the problem predates the latest build:
-
-```bash
-cd frontend
-npm run dev -- --force
-```
-
 Use `http://localhost:5173` and make sure only one backend is listening on port `8080`.
 
 ## Safety
 
-The frontend keeps the signed-in credentials in browser storage (`sessionStorage` with a `localStorage` fallback) so an expired JWT can be renewed silently and the original request retried. These values are never logged or committed. Signing out clears both stores.
+The frontend keeps the signed-in credentials in browser storage (`sessionStorage` with a `localStorage` fallback) and renews an expired JWT proactively, with a `401` retry as a fallback. These values are never logged or committed. Signing out clears both stores.
 
 `.gitignore` blocks:
 

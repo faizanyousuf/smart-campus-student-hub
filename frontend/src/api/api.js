@@ -20,6 +20,7 @@ function loadCredentials() {
 }
 
 let credentials = loadCredentials();
+let renewalInFlight = null;
 
 export function rememberCredentials(email, password) {
   credentials = { email, password };
@@ -39,8 +40,55 @@ function clearSession() {
   forgetCredentials();
 }
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+function isAuthCall(url = '') {
+  return url.includes('/auth/login') || url.includes('/auth/register');
+}
+
+function tokenIsExpired(token) {
+  try {
+    const payload = JSON.parse(
+      atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
+    );
+    // Renew 30 seconds early so a request never leaves with a dead token.
+    return !payload.exp || payload.exp * 1000 <= Date.now() + 30_000;
+  } catch {
+    return true;
+  }
+}
+
+async function renewToken() {
+  if (!credentials) return false;
+
+  if (!renewalInFlight) {
+    renewalInFlight = axios
+      .post(`${api.defaults.baseURL}/auth/login`, credentials)
+      .then((response) => {
+        localStorage.setItem('token', response.data.token);
+        return true;
+      })
+      .catch(() => {
+        clearSession();
+        return false;
+      })
+      .finally(() => {
+        renewalInFlight = null;
+      });
+  }
+
+  return renewalInFlight;
+}
+
+api.interceptors.request.use(async (config) => {
+  if (isAuthCall(config.url)) {
+    return config;
+  }
+
+  let token = localStorage.getItem('token');
+
+  if (token && tokenIsExpired(token)) {
+    await renewToken();
+    token = localStorage.getItem('token');
+  }
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -53,46 +101,20 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
-    const isAuthCall =
-      original?.url?.includes('/auth/login') ||
-      original?.url?.includes('/auth/register');
 
-    if (isAuthCall) {
-      return Promise.reject(error);
-    }
-
-    if (error.response?.status !== 401) {
+    if (isAuthCall(original?.url) || error.response?.status !== 401) {
       return Promise.reject(error);
     }
 
     // Already retried once — give up cleanly without forcing navigation.
-    if (original?._retry) {
-      clearSession();
-      return Promise.reject(error);
-    }
-
-    // Session restored from localStorage only: no credentials to renew with.
-    if (!credentials) {
-      clearSession();
+    if (original?._retry || !(await renewToken())) {
       return Promise.reject(error);
     }
 
     original._retry = true;
+    original.headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
 
-    try {
-      const response = await axios.post(
-        `${api.defaults.baseURL}/auth/login`,
-        credentials
-      );
-
-      localStorage.setItem('token', response.data.token);
-      original.headers.Authorization = `Bearer ${response.data.token}`;
-
-      return api(original);
-    } catch (retryError) {
-      clearSession();
-      return Promise.reject(error);
-    }
+    return api(original);
   }
 );
 
