@@ -2,6 +2,7 @@ package com.smartcampus.hub.controller;
 
 import com.smartcampus.hub.dto.NoticeRequest;
 import com.smartcampus.hub.dto.NoticeResponse;
+import com.smartcampus.hub.dto.NoticeUpdateRequest;
 import com.smartcampus.hub.entity.Notice;
 import com.smartcampus.hub.service.NoticeService;
 import jakarta.validation.Valid;
@@ -41,8 +42,25 @@ public class NoticeController {
         return noticeService.create(request);
     }
 
+    @PutMapping("/{id}")
+    public NoticeResponse update(@PathVariable Long id,
+                                 @Valid @RequestBody NoticeUpdateRequest request) {
+        return noticeService.update(id, request);
+    }
+
     @PatchMapping("/{id}/pin")
     public NoticeResponse pin(@PathVariable Long id) {
         return noticeService.pin(id);
+    }
+
+    @PatchMapping("/{id}/unpin")
+    public NoticeResponse unpin(@PathVariable Long id) {
+        return noticeService.unpin(id);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        noticeService.delete(id);
     }
 }

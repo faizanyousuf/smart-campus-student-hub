@@ -2,10 +2,12 @@ package com.smartcampus.hub.service;
 
 import com.smartcampus.hub.dto.NoticeRequest;
 import com.smartcampus.hub.dto.NoticeResponse;
+import com.smartcampus.hub.dto.NoticeUpdateRequest;
 import com.smartcampus.hub.entity.Notice;
 import com.smartcampus.hub.entity.User;
 import com.smartcampus.hub.repository.NoticeRepository;
 import com.smartcampus.hub.repository.UserRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,11 +42,10 @@ public class NoticeService {
     }
 
     public NoticeResponse findById(Long id) {
-        Notice notice = noticeRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Notice not found: " + id));
-        return toResponse(notice);
+        return toResponse(findEntity(id));
     }
 
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Transactional
     public NoticeResponse create(NoticeRequest request) {
         User author = userRepository.findById(request.postedById())
@@ -62,12 +63,42 @@ public class NoticeService {
         return toResponse(noticeRepository.save(notice));
     }
 
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Transactional
+    public NoticeResponse update(Long id, NoticeUpdateRequest request) {
+        Notice notice = findEntity(id);
+        notice.setTitle(request.title());
+        notice.setBody(request.body());
+        notice.setCategory(request.category());
+        notice.setPinned(request.pinned());
+        return toResponse(noticeRepository.save(notice));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Transactional
     public NoticeResponse pin(Long id) {
-        Notice notice = noticeRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Notice not found: " + id));
+        Notice notice = findEntity(id);
         notice.setPinned(true);
         return toResponse(noticeRepository.save(notice));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Transactional
+    public NoticeResponse unpin(Long id) {
+        Notice notice = findEntity(id);
+        notice.setPinned(false);
+        return toResponse(noticeRepository.save(notice));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Transactional
+    public void delete(Long id) {
+        noticeRepository.delete(findEntity(id));
+    }
+
+    private Notice findEntity(Long id) {
+        return noticeRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Notice not found: " + id));
     }
 
     private NoticeResponse toResponse(Notice notice) {
