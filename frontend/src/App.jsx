@@ -2,6 +2,7 @@ import { useAuth } from './context/AuthContext.jsx';
 import { useState } from 'react';
 import LoginPage from './pages/auth/LoginPage.jsx';
 import RegisterPage from './pages/auth/RegisterPage.jsx';
+import DashboardPage from './pages/dashboard/DashboardPage.jsx';
 import NoticesPage from './pages/notices/NoticesPage.jsx';
 import ComplaintsPage from './pages/complaints/ComplaintsPage.jsx';
 import LostFoundPage from './pages/lostfound/LostFoundPage.jsx';
@@ -9,7 +10,7 @@ import LostFoundPage from './pages/lostfound/LostFoundPage.jsx';
 function App() {
   const { user, loading, logout } = useAuth();
   const [mode, setMode] = useState('login');
-  const [tab, setTab] = useState('notices');
+  const [tab, setTab] = useState('dashboard');
 
   if (loading) {
     return <p style={{ fontFamily: 'sans-serif', padding: 24 }}>Loading...</p>;
@@ -35,7 +36,14 @@ function App() {
           <button onClick={logout}>Logout</button>
 
           <div style={{ margin: '16px 0' }}>
-            <button onClick={() => setTab('notices')} disabled={tab === 'notices'}>
+            <button onClick={() => setTab('dashboard')} disabled={tab === 'dashboard'}>
+              Dashboard
+            </button>
+            <button
+              onClick={() => setTab('notices')}
+              disabled={tab === 'notices'}
+              style={{ marginLeft: 8 }}
+            >
               Notices
             </button>
             <button
@@ -54,6 +62,7 @@ function App() {
             </button>
           </div>
 
+          {tab === 'dashboard' && <DashboardPage />}
           {tab === 'notices' && <NoticesPage />}
           {tab === 'complaints' && <ComplaintsPage />}
           {tab === 'lostfound' && <LostFoundPage />}
