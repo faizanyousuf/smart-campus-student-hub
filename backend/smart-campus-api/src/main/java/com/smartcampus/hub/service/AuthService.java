@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.NoSuchElementException;
+
 @Service
 public class AuthService {
 
@@ -53,6 +55,20 @@ public class AuthService {
         user.setDepartment(request.department());
 
         return buildResponse(userRepository.save(user));
+    }
+
+    public AuthResponse me(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NoSuchElementException("User not found: " + email));
+
+        return new AuthResponse(
+                null,
+                "Bearer",
+                user.getId(),
+                user.getEmail(),
+                user.getRole().name(),
+                user.getFullName()
+        );
     }
 
     private AuthResponse buildResponse(User user) {
